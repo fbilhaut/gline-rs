@@ -60,7 +60,7 @@ impl GreedySearch {
     /// * and neither span is nested in into another, unless `flat_ner` is set to `false`
     fn overlapping(s1: &Span, s2: &Span, flat_ner: bool, multi_label: bool) -> bool {
         if s1.same_offsets(s2) { !multi_label }
-        else if flat_ner && (s1.is_nested_in(s2) || s2.is_nested_in(s1)) { false }
+        else if flat_ner && (s1.is_nested_in(s2) || s2.is_nested_in(s1)) { true }
         else { s1.overlaps(s2) }
     }
 }
