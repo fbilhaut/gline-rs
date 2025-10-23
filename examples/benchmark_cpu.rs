@@ -4,12 +4,15 @@ use gliner::model::pipeline::token::TokenMode;
 use gliner::util::result::Result;
 use gliner::model::{GLiNER, params::Parameters};
 
-fn main() -> Result<()> {    
+#[cfg(feature = "memprof")] 
+use gliner::util::memprof::*;
 
-    const MAX_SAMPLES: usize = 100;
-    const THREADS: usize = 12;
-    const CSV_PATH: &str = "data/nuner-sample-1k.csv";
+const REPEAT: usize = 100;
+const MAX_SAMPLES: usize = 100;
+const THREADS: usize = 12;
+const CSV_PATH: &str = "data/nuner-sample-1k.csv";
 
+fn main() -> Result<()> {
     let entities = [
         "person", 
         "location",
@@ -27,13 +30,24 @@ fn main() -> Result<()> {
         std::path::Path::new("models/gliner-multitask-large-v0.5/tokenizer.json"),
         std::path::Path::new("models/gliner-multitask-large-v0.5/onnx/model.onnx")
     )?;
-
-    println!("Inferencing...");
-    let inference_start = std::time::Instant::now();
-    let _output = model.inference(input)?;
     
-    let inference_time = inference_start.elapsed();
-    println!("Inference took {} seconds on {} samples ({:.2} samples/sec)", inference_time.as_secs(), nb_samples, nb_samples as f32 / inference_time.as_secs() as f32);
+    let global_inference_start = std::time::Instant::now();
+
+    for i in 0..REPEAT {
+        println!("Inferencing ({})...", i + 1);
+        let inference_start = std::time::Instant::now();
+        let _output = model.inference(input.clone())?;
+        
+        let inference_time = inference_start.elapsed();
+        println!("Took {} seconds on {} samples ({:.2} samples/sec)", inference_time.as_secs(), nb_samples, nb_samples as f32 / inference_time.as_secs() as f32);
+
+        #[cfg(feature = "memprof")] 
+        print_memory_usage();
+    }
+
+    let global_inference_time = global_inference_start.elapsed();
+    let global_nb_samples = nb_samples * REPEAT;
+    println!("All {} inferences took {} seconds on {} samples total ({:.2} samples/sec)", REPEAT, global_inference_time.as_secs(), global_nb_samples, global_nb_samples as f32 / global_inference_time.as_secs() as f32);
 
     Ok(())
 }

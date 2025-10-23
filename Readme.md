@@ -150,10 +150,14 @@ Please refer to `doc/ORT.md` for details about execution providers.
 
 ## 📦 Crate Features
 
-This create mirrors the following `ort` features:
+This create mirrors the following `orp`/`ort` features flags:
 
-* To allow for dynamic loading of ONNX-runtime libraries: `load-dynamic`
-* To allow for activation of execution providers: `cuda`, `tensorrt`, `directml`, `coreml`, `rocm`, `openvino`, `onednn`, `xnnpack`, `qnn`, `cann`, `nnapi`, `tvm`, `acl`, `armnn`, `migraphx`, `vitis`, and `rknpu`
+* Dynamic loading of ONNX-runtime libraries: `load-dynamic`
+* Activation of execution providers: `cuda`, `tensorrt`, `directml`, `coreml`, `rocm`, `openvino`, `onednn`, `xnnpack`, `qnn`, `cann`, `nnapi`, `tvm`, `acl`, `armnn`, `migraphx`, `vitis`, and `rknpu`
+
+Other feature flags:
+
+* `memprof`: basic tooling for memory profiling/benchmarking (see `util::memprof`)
 
 
 ## ⏱️ Performances

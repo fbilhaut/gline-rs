@@ -2,6 +2,7 @@ use std::path::Path;
 use crate::util::result::Result;
 
 /// Represents the raw text input, as a list of text chunks and a list of entity classes
+#[derive(Debug, Clone)]
 pub struct TextInput {
     pub texts: Vec<String>,
     pub entities: Vec<String>,
