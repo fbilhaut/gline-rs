@@ -1,6 +1,6 @@
-[![Crates.io](https://img.shields.io/crates/v/gline-rs?logo=rust&style=flat-square&logoColor=white "Crates.io")](https://crates.io/crates/gline-rs)
-
 # 🌿 gline-rs: Inference Engine for GLiNER Models, in Rust
+
+[![Crates.io](https://img.shields.io/crates/v/gline-rs?logo=rust&style=flat-square&logoColor=white "Crates.io")](https://crates.io/crates/gline-rs)
 
 ## 💬 Introduction
 
