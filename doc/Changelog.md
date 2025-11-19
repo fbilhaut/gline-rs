@@ -7,7 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [1.0.1] - UNRELEASED
 
+### Added 
+
 - Basic tooling for memory profiling (see `memprof` feature flag).
+
+### Fixed
+
+- Incorrect validation of relations against the schema (#14)
 
 
 ## [1.0.0] - 2025-06-22
