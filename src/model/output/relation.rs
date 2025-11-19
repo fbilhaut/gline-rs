@@ -74,7 +74,7 @@ impl Relation {
     fn decode(rel_class: &str) -> Result<(String, String)> {
         let split: Vec<&str> = rel_class.split(" <> ").collect();
         if split.len() != 2 {
-            RelationFormatError::new(rel_class).err()
+            RelationFormatError::invalid_relation_label(rel_class).err()
         }
         else {
             Ok((split.get(0).unwrap().to_string(), split.get(1).unwrap().to_string()))
@@ -106,10 +106,18 @@ impl<'a> SpanOutputToRelationOutput<'a> {
     }
 
     fn is_valid(&self, relation: &Relation, context: &RelationContext) -> Result<bool> {
-        // check that the class of the object of the given relation if allowed by the relation schema
-        let potential_classes = context.entity_labels.get(relation.object()).ok_or(RelationFormatError::new("unexpected entity found as object"))?;
-        let spec = self.schema.relations().get(relation.class()).ok_or(RelationFormatError::new("unexpected relation class"))?;
-        Ok(spec.allows_one_of_objects(potential_classes))
+        // check that one the potential labels of the object is allowed by the relation schema ("potential" because the model outputs the text of the object, not its actual label, and in some corner cases the same entity might have several labels)
+        // note that we might have no label at all, if the object is not part of the extracted entities (in such case the relation is not valid)
+        if let Some(potential_labels) = context.entity_labels.get(relation.object()) {
+            // get the spec for the relation label (checking that is is actually expected according to the schema)
+            let spec = self.schema.relations().get(relation.class()).ok_or(RelationFormatError::unexpected_relation_label(relation.class()))?;
+            // check that the spec allows one of the labels
+            Ok(spec.allows_one_of_objects(potential_labels))
+        }
+        else {
+            // in case the extracted object is not part of the extracted entities
+            Ok(false)
+        }
     }
 }
 
@@ -138,16 +146,20 @@ impl Composable<(SpanOutput, RelationContext), RelationOutput> for SpanOutputToR
 
 
 #[derive(Debug, Clone)]
-/// Defines an error caused by an incorrect format of the span label
-/// obtained by the relation extraction pipeline. This is likely to be 
-/// an internal error, unless the pipeline was not used correctly.
+/// Defines an error caused by an malformed or unexpected span label
+/// obtained from the relation extraction pipeline. This is likely to
+/// be an internal error, unless the pipeline was not used correctly.
 pub struct RelationFormatError {
     message: String,
 }
 
 impl RelationFormatError {
-    pub fn new(span_label: &str) -> Self {
-        Self { message: format!("unexpected relation label format: {span_label}") }
+    pub fn invalid_relation_label(label: &str) -> Self {
+        Self { message: format!("invalid relation label format: {label}") }
+    }
+
+    pub fn unexpected_relation_label(label: &str) -> Self {
+        Self { message: format!("unexpected relation label: {label}") }
     }
 
     pub fn err<T>(self) -> Result<T> {
