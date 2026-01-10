@@ -5,7 +5,7 @@ use humansize::{format_size, DECIMAL};
 
 
 #[global_allocator] 
-static ALLOCATOR: Cap<System> = Cap::new(System, usize::max_value());
+static ALLOCATOR: Cap<System> = Cap::new(System, usize::MAX);
 
 
 pub fn print_memory_usage() {
