@@ -14,7 +14,8 @@ For those interested, it can also help getting a deep understanding of GLiNER's 
 
 ## 📌 Latest News 
 
-### 🎉 Version `1.0.0` is out !  
+### 🎉 Version `1.0.0` is out !
+
 Following extensive testing across various environments, `gline-rs` is now considered ready for production!
 
 ### ⚠️ Broken builds with `0.9.x`
