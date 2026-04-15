@@ -43,12 +43,12 @@ impl<'a, S: Splitter, T:Tokenizer> Pipeline<'a> for TokenPipeline<S, T> {
         ]
     }
 
-    fn expected_inputs(&self) -> Option<&std::collections::HashSet<&str>> {
-        Some(&self.expected_inputs)
+    fn expected_inputs(&self, _params: &Self::Parameters) -> Option<impl Iterator<Item = &str>> {
+        Some(self.expected_inputs.iter().copied())
     }
 
-    fn expected_outputs(&self) -> Option<&std::collections::HashSet<&str>> {
-        Some(&self.expected_outputs)
+    fn expected_outputs(&self, _params: &Self::Parameters) -> Option<impl Iterator<Item = &str>> {
+        Some(self.expected_outputs.iter().copied())
     }
 
 }
