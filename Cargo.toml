@@ -29,10 +29,6 @@ name = "relation-extraction"
 path = "examples/relation_extraction.rs"
 
 [[example]]
-name = "relex-span"
-path = "examples/relex_span.rs"
-
-[[example]]
 name = "benchmark-cpu"
 path = "examples/benchmark_cpu.rs"
 
