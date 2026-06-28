@@ -3,6 +3,7 @@
 use composable::Composable;
 use crate::util::math::sigmoid;
 use crate::util::result::Result;
+use crate::util::error::IndexError;
 use crate::text::span::Span;
 use crate::model::pipeline::context::EntityContext;
 use crate::model::output::tensors::TensorOutput;
@@ -49,7 +50,7 @@ impl TensorsToDecoded {
         for sequence_id in 0..batch_size {
             // get a slice for the current sequence (1st dimension)
             let sequence = array.slice(ndarray::s![sequence_id, .., .., ..]);
-            let num_tokens = input.context.tokens.get(sequence_id).unwrap().len();
+            let num_tokens = input.context.tokens.get(sequence_id).ok_or(IndexError::new("span decode: meta.tokens", sequence_id))?.len();
             //println!("{:?}", sequence.map(|x| crate::util::math::sigmoid(*x)));
             
             // prepare the list of spans for this sequence
