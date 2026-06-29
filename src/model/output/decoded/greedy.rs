@@ -2,6 +2,7 @@
 
 use composable::Composable;
 use crate::util::result::Result;
+use crate::util::error::IndexError;
 use crate::text::span::Span;
 use super::SpanOutput;
 
@@ -27,9 +28,9 @@ impl GreedySearch {
     /// Perform greedy search
     /// 
     /// Note: spans are supposed to be sorted by start, and then end, offsets.
-    pub fn search(&self, spans: &[Span]) -> Vec<Span> {
+    pub fn search(&self, spans: &[Span]) -> Result<Vec<Span>> {
         if spans.is_empty() {
-            return Vec::new();
+            return Ok(Vec::new());
         }
 
         let mut result = Vec::with_capacity(spans.len());
@@ -37,8 +38,8 @@ impl GreedySearch {
         let mut next = 1usize;
 
         while next < spans.len() {
-            let prev_span = spans.get(prev).unwrap();
-            let next_span = spans.get(next).unwrap();
+            let prev_span = spans.get(prev).ok_or(IndexError::new("greedy search spans", prev))?;
+            let next_span = spans.get(next).ok_or(IndexError::new("greedy search spans", next))?;
             if self.accept(prev_span, next_span) {
                 result.push(prev_span.clone());
                 prev = next;
@@ -49,10 +50,10 @@ impl GreedySearch {
             next += 1;
         }
 
-        let prev_span = spans.get(prev).unwrap();
+        let prev_span = spans.get(prev).ok_or(IndexError::new("greedy search spans", prev))?;
         result.push(prev_span.clone());
 
-        result
+        Ok(result)
     }
 
     /// Returns `true` iif the span is valid wrt. the provided flags.
@@ -82,7 +83,7 @@ impl Composable<SpanOutput, SpanOutput> for GreedySearch {
         let spans = input.spans
             .iter()
             .map(|s| self.search(s))
-            .collect();
+            .collect::<Result<Vec<Vec<Span>>>>()?;
         Ok(SpanOutput::new(input.texts, input.entities, spans))
     }
 }

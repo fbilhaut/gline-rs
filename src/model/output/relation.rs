@@ -73,12 +73,10 @@ impl Relation {
     
     fn decode(rel_class: &str) -> Result<(String, String)> {
         let split: Vec<&str> = rel_class.split(" <> ").collect();
-        if split.len() != 2 {
-            RelationFormatError::invalid_relation_label(rel_class).err()
+        match split.as_slice() {
+            [subject, object] => Ok((subject.to_string(), object.to_string())),
+            _ => RelationFormatError::invalid_relation_label(rel_class).err(),
         }
-        else {
-            Ok((split.get(0).unwrap().to_string(), split.get(1).unwrap().to_string()))
-        }        
     }
 }
 
@@ -172,5 +170,37 @@ impl std::error::Error for RelationFormatError { }
 impl std::fmt::Display for RelationFormatError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.message)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A relation label lacking the " <> " subject/object separator (a malformed
+    /// model output) must return Err from `Relation::decode` instead of panicking
+    /// on an unwrap of the split parts.
+    #[test]
+    fn decode_rejects_label_without_separator() {
+        assert!(Relation::decode("no-separator-here").is_err());
+    }
+
+    /// A label with more than one separator (three parts) is rejected too,
+    /// preserving the `len() != 2` semantics.
+    #[test]
+    fn decode_rejects_label_with_extra_separator() {
+        assert!(Relation::decode("subject <> object <> extra").is_err());
+    }
+
+    /// A well-formed "<subject> <> <object>" label still decodes to its two
+    /// parts (behavior preserved on valid input). `.ok()` keeps the assertion
+    /// free of unwrap/expect/panic.
+    #[test]
+    fn decode_splits_valid_label() {
+        assert_eq!(
+            Relation::decode("works_at <> ORG").ok(),
+            Some(("works_at".to_string(), "ORG".to_string()))
+        );
     }
 }

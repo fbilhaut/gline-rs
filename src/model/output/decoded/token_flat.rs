@@ -3,6 +3,7 @@
 use std::iter;
 use composable::Composable;
 use crate::util::result::Result;
+use crate::util::error::IndexError;
 use crate::model::output::tensors::TensorOutput;
 use crate::{model::pipeline::context::EntityContext, text::span::Span};
 use crate::util::math::sigmoid;
@@ -43,7 +44,7 @@ impl FlatTokenDecoder {
         // iterate over the whole vector
         for start_idx in 0..position_padding {
             // check the start token score is above threshold, otherwise continue
-            if sigmoid(Self::get(model_output, start_idx)) < self.threshold {
+            if sigmoid(Self::get(model_output, start_idx)?) < self.threshold {
                 continue
             }
 
@@ -62,9 +63,9 @@ impl FlatTokenDecoder {
 
             while (((end_idx / sequence_padding) % batch_size) == sequence_id) && (end_idx < 2 * position_padding) {
                 // check the end token score is above threshold, otherwise continue
-                if sigmoid(Self::get(model_output, end_idx)) >= self.threshold {
+                if sigmoid(Self::get(model_output, end_idx)?) >= self.threshold {
                     // we won't consider a span at all if it contains a score below the threshold
-                    let score = sigmoid(Self::get(model_output, end_idx + position_padding));
+                    let score = sigmoid(Self::get(model_output, end_idx + position_padding)?);
                     if score < self.threshold {
                         break
                     }
@@ -77,7 +78,7 @@ impl FlatTokenDecoder {
 
                         // actually create the span
                         let span = input.create_span(sequence_id, start_token, end_token, class, probability)?;
-                        spans.get_mut(sequence_id).unwrap().push(span);
+                        spans.get_mut(sequence_id).ok_or(IndexError::new("flat token decode spans", sequence_id))?.push(span);
                     }
                 }
 
@@ -90,8 +91,8 @@ impl FlatTokenDecoder {
         Ok(spans)
     }
 
-    #[inline] fn get(model_output: &[f32], index: usize) -> f32 {
-        *model_output.get(index).unwrap()
+    #[inline] fn get(model_output: &[f32], index: usize) -> Result<f32> {
+        Ok(*model_output.get(index).ok_or(IndexError::new("flat token decode model output", index))?)
     }
 }
 
@@ -114,5 +115,21 @@ impl Composable<TensorOutput<'_>, SpanOutput> for TensorsToDecoded {
         let (_shape, logits) = logits.try_extract_raw_tensor::<f32>()?;
         let spans = self.decoder.decode(logits, &input.context)?;        
         Ok(SpanOutput::new(input.context.texts, input.context.entities, spans))      
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// An out-of-bounds index into the flat model-output slice must return Err
+    /// from `get` instead of panicking. A valid index still returns Ok, so
+    /// behavior is preserved on well formed input.
+    #[test]
+    fn get_out_of_bounds_returns_err() {
+        let model_output = [0.1f32, 0.2, 0.3];
+        assert!(FlatTokenDecoder::get(&model_output, 99).is_err());
+        assert!(FlatTokenDecoder::get(&model_output, 1).is_ok());
     }
 }
