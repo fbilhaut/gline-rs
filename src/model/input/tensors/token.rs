@@ -1,4 +1,5 @@
 use ort::session::SessionInputs;
+use ort::value::Tensor;
 use composable::Composable;
 use crate::util::result::Result;
 use super::super::encoded::EncodedInput;
@@ -21,11 +22,11 @@ impl TokenTensors<'_> {
 
     pub fn from(encoded: EncodedInput) -> Result<Self> {
         let inputs = ort::inputs!{
-            TENSOR_INPUT_IDS => encoded.input_ids,
-            TENSOR_ATTENTION_MASK => encoded.attention_masks,
-            TENSOR_WORD_MASK => encoded.word_masks,
-            TENSOR_TEXT_LENGTHS => encoded.text_lengths,
-        }?;
+            TENSOR_INPUT_IDS => Tensor::from_array(encoded.input_ids)?,
+            TENSOR_ATTENTION_MASK => Tensor::from_array(encoded.attention_masks)?,
+            TENSOR_WORD_MASK => Tensor::from_array(encoded.word_masks)?,
+            TENSOR_TEXT_LENGTHS => Tensor::from_array(encoded.text_lengths)?,
+        };
         Ok(Self {
             tensors: inputs.into(),
             context: EntityContext { 

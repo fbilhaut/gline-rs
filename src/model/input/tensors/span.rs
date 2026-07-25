@@ -1,4 +1,5 @@
 use ort::session::SessionInputs;
+use ort::value::Tensor;
 use composable::Composable;
 use crate::util::result::Result;
 use super::super::encoded::EncodedInput;
@@ -24,13 +25,13 @@ impl SpanTensors<'_> {
     pub fn from(encoded: EncodedInput, max_width: usize) -> Result<Self> {
         let (span_idx, span_mask) = Self::make_spans_tensors(&encoded, max_width);
         let inputs = ort::inputs!{
-            TENSOR_INPUT_IDS => encoded.input_ids,
-            TENSOR_ATTENTION_MASK => encoded.attention_masks,
-            TENSOR_WORD_MASK => encoded.word_masks,
-            TENSOR_TEXT_LENGTHS => encoded.text_lengths,
-            TENSOR_SPAN_IDX => span_idx,
-            TENSOR_SPAN_MASK => span_mask,
-        }?;
+            TENSOR_INPUT_IDS => Tensor::from_array(encoded.input_ids)?,
+            TENSOR_ATTENTION_MASK => Tensor::from_array(encoded.attention_masks)?,
+            TENSOR_WORD_MASK => Tensor::from_array(encoded.word_masks)?,
+            TENSOR_TEXT_LENGTHS => Tensor::from_array(encoded.text_lengths)?,
+            TENSOR_SPAN_IDX => Tensor::from_array(span_idx)?,
+            TENSOR_SPAN_MASK => Tensor::from_array(span_mask)?,
+        };
         Ok(Self {
             tensors: inputs.into(),
             context: EntityContext { 
@@ -159,17 +160,17 @@ mod tests {
         let encoded = EncodedInput::from(prepared, &tokenizer)?;
         let spans = SpanTensors::from(encoded, 12)?;
         let span_idx = get_tensor("span_idx", &spans.tensors)?;
-        let span_idx = span_idx.try_extract_tensor::<i64>()?;        
+        let span_idx = span_idx.try_extract_array::<i64>()?;
         let span_masks = get_tensor("span_mask", &spans.tensors)?;
-        let span_masks = span_masks.try_extract_tensor::<bool>()?;        
+        let span_masks = span_masks.try_extract_array::<bool>()?;
         // Some prints
         if false {
             println!("Spans: {:?}", &span_idx);
             println!("Spans Masks: {:?}", &span_masks);
         }
         // Assertions (TODO: add more)
-        assert_eq!(span_idx.shape(), vec![2, 84, 2]);
-        assert_eq!(span_masks.shape(), vec![2, 84]);
+        assert_eq!(span_idx.shape(), &[2, 84, 2]);
+        assert_eq!(span_masks.shape(), &[2, 84]);
         // Everything rules
         Ok(())
     }

@@ -45,10 +45,10 @@ impl TensorsToDecoded {
 
         // look for logits and check its shape
         let logits = input.tensors.get(TENSOR_LOGITS).ok_or("logits not found in model output")?;
-        self.check_shape(logits.shape()?, &input.context)?;
+        self.check_shape(logits.shape(), &input.context)?;
     
         // extract the actual array
-        let array  = logits.try_extract_tensor::<f32>()?;
+        let array  = logits.try_extract_array::<f32>()?;
         //println!("{:?}", array.map(|x| crate::util::math::sigmoid(*x)));
 
         // iterate over sequences
@@ -136,9 +136,9 @@ impl TensorsToDecoded {
     /// Checks coherence of the output shape.
     /// Expected shape is (3, batch_size, num_words, num_classes).
     /// The first dimension is related to `start`, `end` and `inside` positions in that order.
-    fn check_shape(&self, actual_shape: Vec<i64>, context: &EntityContext) -> Result<()> {
+    fn check_shape(&self, actual_shape: &[i64], context: &EntityContext) -> Result<()> {
         let expected_shape = vec![3, context.texts.len() as i64, context.num_words as i64, context.entities.len() as i64];
-        if actual_shape != expected_shape {
+        if actual_shape != expected_shape.as_slice() {
             Err("unexpected logits shape".into())
         }
         else {
