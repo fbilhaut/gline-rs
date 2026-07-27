@@ -112,7 +112,7 @@ impl TensorsToDecoded {
 impl Composable<TensorOutput<'_>, SpanOutput> for TensorsToDecoded {
     fn apply(&self, input: TensorOutput) -> Result<SpanOutput> {        
         let logits = input.tensors.get("logits").ok_or("logits not found in model output")?;
-        let (_shape, logits) = logits.try_extract_raw_tensor::<f32>()?;
+        let (_shape, logits) = logits.try_extract_tensor::<f32>()?;
         let spans = self.decoder.decode(logits, &input.context)?;        
         Ok(SpanOutput::new(input.context.texts, input.context.entities, spans))      
     }
