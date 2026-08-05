@@ -13,6 +13,8 @@ pub struct TokenizedInput {
     pub texts: Vec<String>,    
     /// Original entities
     pub entities: Vec<String>, 
+    /// Original relations
+    pub relations: Vec<String>, 
 }
 
 
@@ -29,6 +31,7 @@ impl TokenizedInput {
             tokens,
             texts: input.texts,            
             entities: input.entities,
+            relations: input.relations,
         })
     }
 }

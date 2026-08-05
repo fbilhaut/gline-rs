@@ -17,6 +17,8 @@ pub struct PromptInput {
     pub tokens: Vec<Vec<Token>>,
     /// Entities (moved from input)
     pub entities: Vec<String>,
+    /// Relations (moved from input)
+    pub relations: Vec<String>,
     /// Number of tokens of the text part for each prompt
     pub text_lengths: Vec<usize>,
     /// Maximum number of words in a prompt excluding entities (number of tokens in the largest sequence in the batch)
@@ -26,11 +28,16 @@ pub struct PromptInput {
 }
 
 
+const ENTITY_TOKEN: &str = "<<ENT>>";
+const RELATIONS_TOKEN: &str = "<<REL>>";
+const SEP_TOKEN: &str = "<<SEP>>";
+
+
 impl PromptInput {
 
     pub fn from(input: TokenizedInput) -> Self {
-        // prepare the entities part of the prompt (will be copied into each actual prompt)
-        let entities_prompt = Self::entities_prompt(&input.entities);        
+        // prepare the entities/relations part of the prompt (will be copied into each actual prompt)
+        let additional_prompt = Self::additional_prompt(&input);
         // the text lengths for each sequence (number of actual tokens beside the entities part)
         let mut text_lengths = Vec::<usize>::new();
         // the maximum number of words in a prompt excluding entities (number of tokens in the largest sequence in the batch)
@@ -41,13 +48,13 @@ impl PromptInput {
         // iterate over each sequence of tokens
         for tokens in &input.tokens {
             // prepare the sequence of tokens for this prompt
-            let mut prompt = Vec::with_capacity(entities_prompt.len() + tokens.len());
+            let mut prompt = Vec::with_capacity(additional_prompt.len() + tokens.len());
             // copy the entities part
-            prompt.extend(entities_prompt.clone());
+            prompt.extend(additional_prompt.clone());
             // append each text token of the current sequence
             prompt.extend(tokens.iter().map(|token| token.text().to_string()));
             // update output data
-            prompts.push(Prompt::new(prompt, tokens.len(), entities_prompt.len()));        
+            prompts.push(Prompt::new(prompt, tokens.len(), additional_prompt.len()));        
             text_lengths.push(tokens.len());
             num_words = std::cmp::max(num_words, tokens.len());
     
@@ -58,6 +65,7 @@ impl PromptInput {
             texts: input.texts,
             tokens: input.tokens,
             entities: input.entities,
+            relations: input.relations,
             text_lengths,
             num_words,
             prompts,            
@@ -65,19 +73,22 @@ impl PromptInput {
     
     }
 
+    /// Create the entities/relations part of the prompt.
+    fn additional_prompt(input: &TokenizedInput) -> Vec<String> {
+        let mut result = Self::additional_tokens(&input.entities, ENTITY_TOKEN);
+        result.append(&mut Self::additional_tokens(&input.relations, RELATIONS_TOKEN));
+        result
+    }
 
-    /// Create the entities part of the prompt.
-    fn entities_prompt(entities: &Vec<String>) -> Vec<String> {
-        const ENTITY_TOKEN: &str = "<<ENT>>";
-        const SEP_TOKEN: &str = "<<SEP>>";
-
-        let mut result = Vec::with_capacity(entities.len() * 2 + 1);
-        for entity in entities {
-            result.push(ENTITY_TOKEN.to_string());
-            result.push(entity.clone());
+    fn additional_tokens(items: &Vec<String>, prefix_token: &str) -> Vec<String> {
+        let mut result = Vec::with_capacity(items.len() * 2 + 1);
+        for item in items {
+            result.push(prefix_token.to_string());
+            result.push(item.clone());
         }
-
-        result.push(SEP_TOKEN.to_string());
+        if !result.is_empty() {
+            result.push(SEP_TOKEN.to_string());
+        }
         result
     }
 

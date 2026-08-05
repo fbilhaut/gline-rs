@@ -3,7 +3,7 @@
 use composable::Composable;
 use crate::util::result::Result;
 use crate::text::span::Span;
-use super::SpanOutput;
+use super::{SpanOutput, RelexOutput};
 
 /// Greedy decoding implementation.
 /// 
@@ -84,5 +84,14 @@ impl Composable<SpanOutput, SpanOutput> for GreedySearch {
             .map(|s| self.search(s))
             .collect();
         Ok(SpanOutput::new(input.texts, input.entities, spans))
+    }
+}
+
+
+/// Composable: RelexOutput => RelexOutput
+impl Composable<RelexOutput, RelexOutput> for GreedySearch {
+    fn apply(&self, input: RelexOutput) -> Result<RelexOutput> {      
+        let spans = GreedySearch::apply(&self, input.spans)?;        
+        Ok(RelexOutput::new(spans))
     }
 }

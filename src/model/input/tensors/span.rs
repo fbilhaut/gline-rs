@@ -37,6 +37,7 @@ impl SpanTensors<'_> {
                 texts: encoded.texts, 
                 tokens: encoded.tokens, 
                 entities: encoded.entities, 
+                relations: encoded.relations,
                 num_words: encoded.num_words 
             },            
         })
@@ -75,6 +76,7 @@ impl SpanTensors<'_> {
         // prepare output tensors (zero-filled, values will be set in place)
         let mut span_idx = ndarray::Array::zeros((encoded.texts.len(), num_spans, 2));
         let mut span_mask = ndarray::Array::from_elem((encoded.texts.len(), num_spans), false);
+
 
         // iterate over segments
         for s in 0..encoded.texts.len() {

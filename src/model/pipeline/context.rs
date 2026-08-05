@@ -11,6 +11,7 @@ pub struct EntityContext {
     pub texts: Vec<String>,
     pub tokens: Vec<Vec<Token>>,
     pub entities: Vec<String>,
+    pub relations: Vec<String>,
     pub num_words: usize,
 }
 

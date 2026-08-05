@@ -2,7 +2,7 @@
 
 use composable::Composable;
 use crate::util::result::Result;
-use super::SpanOutput;
+use super::{SpanOutput, RelexOutput};
 
 #[derive(Default)] 
 pub struct SpanSort {}
@@ -19,5 +19,13 @@ impl Composable<SpanOutput, SpanOutput> for SpanSort {
             sequence.sort_unstable_by(|s1, s2| s1.offsets().cmp(&s2.offsets()));
         }
         Ok(SpanOutput::new(input.texts, input.entities, spans))
+    }
+}
+
+/// Composable: RelexOutput => RelexOutput
+impl Composable<RelexOutput, RelexOutput> for SpanSort {
+    fn apply(&self, input: RelexOutput) -> Result<RelexOutput> {      
+        let spans = SpanSort::apply(&self, input.spans)?;        
+        Ok(RelexOutput::new(spans))
     }
 }

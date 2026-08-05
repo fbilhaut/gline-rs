@@ -5,6 +5,9 @@ pub mod token;
 pub mod token_flat;
 pub mod sort;
 pub mod greedy;
+pub mod span_relex;
+
+use std::fmt::Debug;
 
 use crate::text::span::Span;
 
@@ -34,5 +37,23 @@ impl std::fmt::Display for SpanOutput {
             }
         }
         Ok(())
+    }
+}
+
+pub struct RelexOutput {
+    pub spans: SpanOutput,
+    // + relations
+}
+
+impl RelexOutput {
+    pub fn new(spans: SpanOutput) -> Self {
+        Self { spans }
+    }
+}
+
+
+impl std::fmt::Display for RelexOutput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.spans, f)
     }
 }

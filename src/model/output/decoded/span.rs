@@ -33,7 +33,7 @@ impl TensorsToDecoded {
         [TENSOR_LOGITS]
     }
 
-    fn decode(&self, input: &TensorOutput) -> Result<Vec<Vec<Span>>> {        
+    pub(crate) fn decode(&self, input: &TensorOutput) -> Result<Vec<Vec<Span>>> {
         // prepare output vector
         let batch_size = input.context.texts.len();
         let mut result: Vec<Vec<Span>> = Vec::new();
@@ -79,7 +79,7 @@ impl TensorsToDecoded {
 
 
     /// Checks coherence of the output shape
-    /// Expected shape is (batch_size, num_words, num_spans, num_classes)
+    /// Expected shape is (batch_size, num_words, max_width, num_classes)
     fn check_shape(&self, actual_shape: Vec<i64>, context: &EntityContext) -> Result<()> {
         let expected_shape = vec![context.texts.len() as i64, context.num_words as i64, self.max_width as i64, context.entities.len() as i64];
         if actual_shape != expected_shape {
