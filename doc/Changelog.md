@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Switch to `orp` version `1.0.0`.
 - Switch to `composable` version `1.0.0`.
 
+### Fixed
+
+- Return Err instead of panicking in the output decoder ([PR#16](https://github.com/fbilhaut/gline-rs/pull/16))
+
 
 ## [1.0.1] - 2026-01-10
 
